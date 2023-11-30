@@ -1,0 +1,49 @@
+import tensorflow as tf
+import numpy as np
+import cv2
+import mediapipe as mp
+
+text_descriptions = ["hello", "how are you", "goodbye"]
+sign_language_glosses = ["sign_hello", "sign_how_are_you", "sign_goodbye"]
+
+def tokenize_text(text):
+    return [word_to_index[word] for word in text.split()]
+
+def tokenize_gloss(gloss):
+    return [gloss_to_index[g] for g in gloss.split()]
+
+text_data = [tokenize_text(text) for text in text_descriptions]
+gloss_data = [tokenize_gloss(gloss) for gloss in sign_language_glosses]
+
+max_sequence_length = max(max(len(text_seq), len(gloss_seq)) for text_seq, gloss_seq in zip(text_data, gloss_data))
+text_data = [seq + [0] * (max_sequence_length - len(seq)) for seq in text_data]
+gloss_data = [seq + [0] * (max_sequence_length - len(seq)) for seq in gloss_data]
+
+X = np.array(text_data)
+y = np.array(gloss_data)
+
+model = tf.keras.Sequential([
+    tf.keras.layers.Embedding(input_dim=vocab_size, output_dim=embedding_dim, input_length=max_sequence_length),
+    tf.keras.layers.LSTM(64, return_sequences=True),
+    tf.keras.layers.LSTM(64, return_sequences=True),
+    tf.keras.layers.Dense(gloss_vocab_size, activation='softmax')
+])
+
+model.compile(optimizer='adam', loss='sparse_categorical_crossentropy')
+
+model.fit(X, y, epochs=100)
+
+model.save('trained_seq2seq_model.h5')
+
+trained_model = tf.keras.models.load_model('trained_seq2seq_model.h5')
+
+def text_to_sign_language(text_description):
+    numerical_representation = #
+    predicted_glosses = trained_model.predict(np.expand_dims(numerical_representation, axis=0))
+    sign_language_gloss = # 
+    return sign_language_gloss
+
+text_description = "hello, how are you?"
+sign_language_gloss = text_to_sign_language(text_description)
+print(f"Text: {text_description}")
+print(f"Sign Language Gloss: {sign_language_gloss}")
